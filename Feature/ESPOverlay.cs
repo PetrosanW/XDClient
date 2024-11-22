@@ -1,13 +1,10 @@
-﻿using Il2CppBrokenArrow.DataBase.Models;
-using Il2CppBrokenArrow.ScriptEngine.Nodes.Economy;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections.Generic;
 
 namespace XDClient.Feature
 {
-    public class EspOverlay
+    public class EspOverlay 
     {
-        NodeGetMoney.
-        
         private static Material? _lineMaterial;
         private GUIStyle? _style;
         private readonly List<LabelInfo> _labels = new();
@@ -38,7 +35,6 @@ namespace XDClient.Feature
                 if (screenPos.z > 0)
                 {
                     screenPos.y = Screen.height - screenPos.y;
-                    
                     GUI.Label(new Rect(screenPos.x - 50, screenPos.y - 20, 100, 20), label.Text, _style);
                 }
             }
@@ -49,7 +45,6 @@ namespace XDClient.Feature
         private void DrawEntities()
         {
             _labels.Clear();
-            
             GameObject entityHub = GameObject.Find("UNITS HUB");
         
             if (entityHub == null)
@@ -59,7 +54,6 @@ namespace XDClient.Feature
     
             Transform hubTransform = entityHub.transform;
             int childCount = hubTransform.childCount;
-            
             int deadUnitsLayer = LayerMask.NameToLayer("DeadUnits");
     
             for (int i = 0; i < childCount; i++)
@@ -75,18 +69,34 @@ namespace XDClient.Feature
                 
                 if (boxCollider != null)
                 {
-                    // Рисуем рамку вокруг BoxCollider
                     DrawBoxCollider(boxCollider);
-                    
                     Vector3 topCenter = boxCollider.transform.TransformPoint(boxCollider.center + new Vector3(0, boxCollider.size.y / 2, 0));
-                    
                     _labels.Add(new LabelInfo
                     {
                         Position = topCenter,
-                        Text = child.name
+                        Text = CleanEntityName(child.name)
+                    });
+                }
+                else
+                {
+                    DrawDefaultBox(child.position, Vector3.one * 2, child.rotation);
+                    _labels.Add(new LabelInfo
+                    {
+                        Position = child.position + Vector3.up * 1,
+                        Text = CleanEntityName(child.name)
                     });
                 }
             }
+        }
+        
+        private string CleanEntityName(string originalName)
+        {
+            int index = originalName.IndexOf('(');
+            if (index > 0)
+            {
+                return originalName.Substring(0, index).Trim();
+            }
+            return originalName;
         }
         
         private void DrawBoxCollider(BoxCollider boxCollider)
@@ -94,9 +104,7 @@ namespace XDClient.Feature
             Vector3 center = boxCollider.transform.TransformPoint(boxCollider.center);
             Vector3 size = Vector3.Scale(boxCollider.size, boxCollider.transform.lossyScale);
             Quaternion rotation = boxCollider.transform.rotation;
-    
             Vector3 extents = size / 2;
-            
             Vector3[] vertices = new Vector3[8];
     
             vertices[0] = center + rotation * new Vector3(-extents.x, -extents.y, -extents.z);
@@ -112,12 +120,38 @@ namespace XDClient.Feature
             DrawLine(vertices[1], vertices[2]);
             DrawLine(vertices[2], vertices[3]);
             DrawLine(vertices[3], vertices[0]);
-    
             DrawLine(vertices[4], vertices[5]);
             DrawLine(vertices[5], vertices[6]);
             DrawLine(vertices[6], vertices[7]);
             DrawLine(vertices[7], vertices[4]);
+            DrawLine(vertices[0], vertices[4]);
+            DrawLine(vertices[1], vertices[5]);
+            DrawLine(vertices[2], vertices[6]);
+            DrawLine(vertices[3], vertices[7]);
+        }
+        
+        private void DrawDefaultBox(Vector3 position, Vector3 size, Quaternion rotation)
+        {
+            Vector3 extents = size / 2;
+            Vector3[] vertices = new Vector3[8];
     
+            vertices[0] = position + rotation * new Vector3(-extents.x, -extents.y, -extents.z);
+            vertices[1] = position + rotation * new Vector3(extents.x, -extents.y, -extents.z);
+            vertices[2] = position + rotation * new Vector3(extents.x, -extents.y, extents.z);
+            vertices[3] = position + rotation * new Vector3(-extents.x, -extents.y, extents.z);
+            vertices[4] = position + rotation * new Vector3(-extents.x, extents.y, -extents.z);
+            vertices[5] = position + rotation * new Vector3(extents.x, extents.y, -extents.z);
+            vertices[6] = position + rotation * new Vector3(extents.x, extents.y, extents.z);
+            vertices[7] = position + rotation * new Vector3(-extents.x, extents.y, extents.z);
+            
+            DrawLine(vertices[0], vertices[1]);
+            DrawLine(vertices[1], vertices[2]);
+            DrawLine(vertices[2], vertices[3]);
+            DrawLine(vertices[3], vertices[0]);
+            DrawLine(vertices[4], vertices[5]);
+            DrawLine(vertices[5], vertices[6]);
+            DrawLine(vertices[6], vertices[7]);
+            DrawLine(vertices[7], vertices[4]);
             DrawLine(vertices[0], vertices[4]);
             DrawLine(vertices[1], vertices[5]);
             DrawLine(vertices[2], vertices[6]);
