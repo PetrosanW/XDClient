@@ -20,6 +20,8 @@ namespace XDClient
 
         private readonly PointsEditor _pointsEditor = new();
         private readonly EspOverlay _espOverlay = new();
+
+        private readonly HarmonyLib.Harmony _harmony = new("XDClient");
         
         private enum Tab
         {
@@ -32,10 +34,11 @@ namespace XDClient
         private Rect _windowPosition = new Rect(10, 10, 400, 300);
         
         private bool _isDragging;
-        private Vector2 _dragOffset;
 
         public override void OnInitializeMelon()
         {
+            _harmony.PatchAll();
+            
             LoggerInstance.Msg("[XDClient] Started");
         }
 
@@ -173,7 +176,6 @@ namespace XDClient
             if (e.type == EventType.MouseDown && e.button == 0 && headerRect.Contains(mousePosition))
             {
                 _isDragging = true;
-                _dragOffset = mousePosition;
                 e.Use();
             }
 
